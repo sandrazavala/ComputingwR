@@ -1,0 +1,240 @@
+---
+title: "hw1-sandra-zavala."
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+```{r}
+library(tidyverse)
+```
+
+
+## 1) Data `storms`
+
+The data file for this lab has to do with Storms. 
+The dataset is part of the `dplyr` package: `storms`.`
+```{r}
+storms
+```
+## 2) Storms in 2015
+
+### a) Write a "dplyr" command to create a table (i.e. tibble) storms2015 containing the storms that took place in the year 2015.
+
+```{r}
+storms2015 <- filter(storms, year == 2015)
+storms2015
+```
+
+
+### b) With storms2015, write a command that returns only the name of unique storms in 2015. In other words, the output should display only the unique names and nothing else.
+
+```{r}
+unique(pull(storms2015, name))
+```
+
+
+### c) With storms2015, write a command that returns a table with the name of each unique storm and the number of times it appears. In other words, this is a table with two columns: 1) name of storm, and 2) the number of counts of each storm.
+
+```{r}
+count(storms2015, name)
+```
+
+
+### d) With storms2015, write a command that gives you the name, month and day of the first storm recorded in 2015.
+
+```{r}
+head(select((storms2015 %>% arrange(month, day, hour)), name, month, day),1)
+```
+
+
+### e) With storms2015, write a command that gives you the number of hurricanes that occurred in 2015. Hint: How does a storm acquire hurricane status? (category 3+)
+
+```{r}
+count((filter(storms2015, category >= 3)))
+```
+
+
+### f) With storms2015, write a command that gives you the names of the hurricanes that occurred during that year. Hint: How does a storm acquire hurricane status?
+
+```{r}
+unique(pull((filter(storms2015, category >= 3)), name))
+```
+
+## 3) More manipulation
+a) Use "dplyr" functions/commands to create a table (e.g. tibble) storm_names_2010s
+containing columns name and year of storms recorded from 2010 to 2015. To clarify,
+this table should contain only one occurrence of each storm. Use head() and tail()
+to display its first 5 rows, and also its last 5 rows.
+
+```{r}
+storm_names_2010s <- distinct(select(filter(storms, year == 2010 | year == 2011 | year == 2012 | year == 2013 | year == 2014 | year == 2015), name, year))
+storm_names_2010s
+```
+
+```{r}
+first_five <- head(storm_names_2010s, 5)
+last_five <- tail(storm_names_2010s, 5)
+
+first_five
+```
+
+
+```{r}
+first_five <- head(storm_names_2010s, 5)
+last_five <- tail(storm_names_2010s, 5)
+
+last_five
+```
+
+b) With the entire storms data, use "dplyr" functions/commands to create a table (or
+tibble) storm_counts_per_year containing the number of unique storms in each year
+(i.e. counts of storms in each year). This table should contain two columns: year values
+in the first column, and the number of unique storms in the second column. Display
+its last 15 rows.
+
+```{r}
+storm_counts_per_year <- count(group_by(distinct(select(storms, name, year)), year))
+tail(storm_counts_per_year, 15)
+```
+
+c) With the entire storms data, use "dplyr" functions/commands to create a table
+(e.g. tibble) max_wind_per_storm containing three columns: 1) year of storm, 2) name
+of storm, and 3) max_wind maximum wind speed record (for that storm). Display its
+first 10 rows, and also its last 10 rows
+
+```{r}
+max_wind_per_storm <- summarise(
+  group_by(storms, name, year),
+  max_wind = max(wind))
+max_wind_per_storm
+```
+
+```{r}
+first_ten <- head(max_wind_per_storm, 10)
+last_ten <- tail(max_wind_per_storm, 10)
+
+first_ten
+```
+
+```{r}
+last_ten
+```
+
+##4) Some basic plots with "ggplot2"
+a) Make a barchart for the number of (unique) storms in each year during the period 2010
+to 2015. Make sure that the axis-label of each bar indicates the associated year. Also,
+add a meaningful title to the plot.
+
+```{r}
+storm2010_15 <- filter(storms, year == 2010 | year == 2011 | year == 2012 | year == 2013 | year == 2014 | year == 2015)
+uniquestorm2010_15 <- summarise(group_by(storm2010_15,year), number = n())
+uniquestorm2010_15
+```
+
+```{r}
+ggplot(data=uniquestorm2010_15, aes(x=factor(year), y=number)) +
+  geom_bar(stat="identity", color= "black", fill= "lightsalmon") + ggtitle('Storm Count by Year from 2010 - 2015')
+```
+
+b) Using the entire storms table, make a density graph for the variable wind, adding
+color to the border line, as well as the filling color of the density curve. Also, add a
+meaningful title to the plot, and choose the “Black-White” theme for the background
+of the graph.
+
+```{r}
+ggplot(data=storms, aes(x=wind)) + geom_density(fill='paleturquoise4') +  ggtitle('Density of Wind for All Storms') + theme_bw() + scale_color_brewer(palette="Dark2")
+```
+
+c) Make boxplots for the variable pressure of storms in each year during the period 2000
+to 2011. Use facets for year (i.e. one facet per year). Also, add a meaningful title to
+the plot, and choose the “Minimal” theme for the background of the graph.
+```{r}
+storms2000_2011 <- filter(storms, year==2000 | year==2001 | year==2002 | year==2003 | year==2004 | year==2005 | year==2006 | year==2007 | year==2008 | year==2009 | year==2010 | year==2011)
+storms2000_2011
+```
+
+```{r}
+ggplot(storms2000_2011,aes(x = year, y = pressure )) + facet_wrap(~year) + geom_boxplot(color= "black", fill = "cornsilk2", width= 1) + theme(panel.spacing = unit(2, "lines")) + theme_minimal()  +  ggtitle('Wind Density for All Storms')
+```
+
+d) Using the entire storms table, graph a timeline of the median wind speed by year.
+That is: years in the x-axis, median wind-speed in the y-axis, timeline connecting the
+dots for median wind speed in each year. Also, add a meaningful title to the plot.
+
+```{r}
+median_wind_per_year <- summarise(group_by(storms, year),
+                                  median_wind = median(wind))
+ggplot(median_wind_per_year, aes(x = year, y = median_wind)) +
+geom_line() + 
+geom_point() +
+ggtitle('Median Wind Speed by Year')
+```
+
+
+##5) Wind Speed and Pressure
+a) With the entire storms table, use "ggplot2" functions to make a scatterplot of wind
+(x-axis) and pressure (y-axis). Because of the large number of dots, add an alpha
+value in order to make the dots somewhat transparent. Likewise, see how to add a
+“smoother” with the function stat_smooth(). Also, add a meaningful title to the plot.
+
+```{r}
+
+ggplot(storms, aes(x = wind, y = pressure)) + stat_smooth()  + geom_point(alpha=.3) +  ggtitle('Wind vs Pressure ')
+```
+
+b) With the entire storms table, use "ggplot2" functions to make the previous scatterplot
+of wind (x-axis) and pressure (y-axis). This time don’t include a smoother; instead use
+the variable category to color-code the dots in the scatterplot. Also, add a meaningful
+title to the plot.
+
+```{r}
+ggplot(storms, aes(x = wind, y = pressure))  + geom_point(aes(color=category)) +
+ggtitle('Wind vs Pressure')
+```
+
+
+##6) Storm Categories
+a) Use "dplyr" functions/commands to display, in ascending order, the different (unique)
+types of storm categories (using the entire storms table).
+
+```{r}
+storm_categories <- distinct(storms, category)
+arrange(storm_categories)
+
+```
+
+b) With the entire storms table, use "dplyr" functions/commands to display a table
+showing the category, avg_pressure (average pressure), and avg_wind (average wind
+speed), for each type of storm category. This table should contain three columns: 1)
+category, 2) avg_pressure, and 3) avg_wind.
+
+```{r}
+summarise(
+  group_by (storms,category),
+  avg_pressure= mean(pressure),
+  avg_wind= mean(wind),
+)
+
+```
+
+c) With the entire storms table, make a chart to visualize pressure in terms of the
+different category values. For example, you can use either histograms, or density
+curves, or boxplot, or violin plots. Add a meaningful title to the plot.
+
+```{r}
+ggplot(storms, aes(x= category, y=pressure)) +
+  geom_boxplot(color= "black", fill= "aquamarine3", width= 0.9) +
+ggtitle('Pressure Level by Storm Category')
+```
+
